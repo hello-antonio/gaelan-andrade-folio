@@ -6,6 +6,7 @@
 	--font: "HK Grotesk", sans-serif;
 }
 
+
 .icon {
 	display: inline-block;
 	width: 36px;
@@ -20,6 +21,7 @@ html {
 	font-size: 12px;
 	overflow-x: hidden;
 	scroll-behavior: smooth;
+	// scroll-padding: 70px; 
 	@media (prefers-reduced-motion: reduce) {scroll-behavior: none;}
 	@media (min-width: 1440px) {
 		font-size: 14px;
@@ -55,7 +57,7 @@ body {
 	font-feature-settings: "case" on, "cpsp" on;
 }
 
-a {
+a, .a {
 	color: var(--primary);
 	cursor: pointer;
 	text-decoration-color: var(--primary);
@@ -94,6 +96,7 @@ noscript {
 
 // AUTHOR
 $sp: (20/6.2) + vh;
+
 
 #page {
 	padding: 0;
@@ -242,9 +245,23 @@ p {
 }
 
 // SCROLL
+#percent {
+	display: none;
+}
+
+.smooth-scroll #percent {
+	padding: 15vmin $sp;
+	position: fixed;
+	bottom:0;
+	pointer-events: none;
+	z-index: 100;
+	display: block;
+	opacity: 0;
+}
 .smooth-scroll body {
 	overflow: hidden;
 	height: 100vh;
+	position: absolute;
 }
 
 .smooth-scroll [data-scroll] {
@@ -282,6 +299,10 @@ p {
 		font-size: 24px;
 		margin: auto;
 	}
+}
+
+#go-to-info {
+	cursor: pointer;
 }
 
 // LOADER
@@ -403,3 +424,5 @@ $debug: false;
 	background-image: radial-gradient(rgba(#888, 0.1) 1px, transparent 0);
 	background-size: 10px 10px;
 }
+
+
