@@ -1,5 +1,4 @@
 {
-  // 404
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   //=======================================================================================
   // SMOOTH SCROLL
@@ -9,12 +8,19 @@
       this.body = document.body;
       this.root = document.documentElement;
       this.images = [...document.querySelectorAll(".img")];
+      this.screen = {
+        w: window.innerWidth,
+        h: window.innerHeight };
 
       this.targetY = 0;
       this.currentY = 0;
       this.ease = 0.1;
 
       this.section = document.querySelector("[data-scroll]");
+      this.sectionPercent = document.querySelector("#percent");
+      this.sectionContent = this.section.querySelector("[data-scroll-content]");
+      this.sectionRect = this.sectionContent.getBoundingClientRect();
+
       this.sectionHeight = 0;
 
       this.raf = undefined;
@@ -30,7 +36,7 @@
     }
 
     handlePointerEvents() {
-      const bodyClassList = this.body.classList;
+      const bodyClassList = document.body.classList;
       // clear previous timeout function
       clearTimeout(this.timer);
 
@@ -46,16 +52,26 @@
     }
 
     resize() {
-      this.sectionHeight = this.section.getBoundingClientRect().height;
+      this.screen = {
+        w: window.innerWidth,
+        h: window.innerHeight };
+
+
+      this.normHeight();
       this.loop();
+    }
+
+    normHeight() {
+      // this.sectionRect = this.section.getBoundingClientRect();
+      this.sectionRect = this.sectionContent.getBoundingClientRect();
+      let sub = this.sectionRect.height - this.screen.h;
+      let final = sub * 0.5 + this.screen.h;
+      this.body.style.height = Math.floor(final) + "px";
     }
 
     styles() {
       this.resize();
       this.root.classList.add("smooth-scroll");
-      // this.images.forEach(img=>{
-      // 	img.style.transform = "perspective(100vw)";
-      // })
     }
 
     scrolling(elm, transform = undefined) {
@@ -97,7 +113,7 @@
       delta = Math.abs(diff) < 0.1 ? 0 : diff * this.ease;
 
       let swy = diff * 0.01; // skew y
-      let rx = delta * 2; // rotate x
+      let rx = delta * 1.5; // rotate x
 
       if (delta) {
         this.currentY += delta;
@@ -114,6 +130,8 @@
       }
 
       this.scrolling(this.section, `translate3d(0, -${this.currentY}px,0)`);
+      // this.scrolling(this.sectionPercent, `translate3d(0, -${this.currentY}px,0)`);
+      // this.sectionPercent.textContent = (Math.ceil(this.currentY * .1))+"%";
       this.images.forEach(img => {
         img.style.transform = `perspective(100vw) rotateX(${rx}deg)`;
       });
@@ -133,10 +151,137 @@
     }}
 
 
-  window.addEventListener("load", () => {
-    document.body.classList.remove("preload");
+  var time = 0;
+  var loader = document.querySelector("#loader h3");
+  var triggerScroll = document.getElementById("go-to-info");
+  var targetView = document.getElementById("info");
+  var m = {
+    lerp: function (x, y, v) {
+      return x * (1 - v) + y * v;
+    },
+    clamp: function (a, min = 0, max = 1) {
+      return Math.min(max, Math.max(min, a));
+    } };
 
-    if (!isMobile) new SmoothScroll();
+
+  var easings = {
+    linear(t) {
+      return t;
+    },
+    easeOutBounce(x) {
+      const n1 = 7.5625;
+      const d1 = 2.75;
+
+      if (x < 1 / d1) {
+        return n1 * x * x;
+      } else if (x < 2 / d1) {
+        return n1 * (x -= 1.5 / d1) * x + 0.75;
+      } else if (x < 2.5 / d1) {
+        return n1 * (x -= 2.25 / d1) * x + 0.9375;
+      } else {
+        return n1 * (x -= 2.625 / d1) * x + 0.984375;
+      }
+    },
+    easeInBounce(x) {
+      return 1 - easings["easeOutBounce"](1 - x);
+    } };
+
+
+  const nope = () => {};
+
+  const tween = (o = {}) => {
+    const v = {
+      d: o.duration || 1000,
+      delay: o.delay || 0,
+      easing: o.easing || "linear",
+      complete: o.complete || nope,
+      update: o.update || nope };
+
+
+    const f = () => {
+      let rafid = undefined;
+      let running = false;
+      let start = performance.now() + v.delay;
+
+      const update = () => {
+        let time = (performance.now() - start) / v.d;
+        time = m.clamp(time, 0, 1);
+        const progress = easings[v.easing](time);
+
+        if (rafid) v.update(progress);
+
+        if (time < 1) {
+          rafid = requestAnimationFrame(update);
+        } else {
+          cancelAnimationFrame(rafid);
+          v.complete();
+          running = false;
+          start = 0;
+          return;
+        }
+      };
+
+      const loop = () => {
+        if (!running) {
+          running = true;
+          rafid = requestAnimationFrame(update);
+        }
+      };
+
+      loop();
+    };
+
+    f();
+  };
+
+  triggerScroll.addEventListener("click", () => {
+    if (isMobile) {
+      targetView.scrollIntoView();
+      return;
+    }
+
+    // let pos = { last: 0, end: targetView.offsetTop / 2 };
+    // anime({
+    // 	targets: pos,
+    // 	last: pos.end,
+    // 	easing: "easeInBounce",
+    // 	duration: 800,
+    // 	update: function () {
+    // 		window.scrollTo(0, pos.last);
+    // 	}
+    // });
+    const offsetTop = targetView.offsetTop / 2;
+    tween({
+      easing: "easeInBounce",
+      duration: 800,
+      update: function (t) {
+        window.scrollTo(0, m.lerp(0, offsetTop, t));
+      } });
 
   });
+
+  window.addEventListener("load", () => {
+    setTimeout(function () {
+      window.scrollTo(0, 0);
+      fLoader();
+      exitLoader();
+    }, 1000);
+  });
+
+  function fLoader() {
+    time = time + 1;
+    loader.textContent = time + "%";
+
+    if (time === 100) {
+      return;
+    }
+    window.requestAnimationFrame(fLoader);
+  }
+
+  function exitLoader() {
+    setTimeout(function () {
+      document.body.classList.remove("preload");
+      if (!isMobile) new SmoothScroll();
+    }, 1200 - time);
+  }
 }
