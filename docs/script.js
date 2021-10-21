@@ -10,7 +10,8 @@
       this.images = [...document.querySelectorAll(".img")];
       this.screen = {
         w: window.innerWidth,
-        h: window.innerHeight };
+        h: window.innerHeight,
+      };
 
       this.targetY = 0;
       this.currentY = 0;
@@ -54,8 +55,8 @@
     resize() {
       this.screen = {
         w: window.innerWidth,
-        h: window.innerHeight };
-
+        h: window.innerHeight,
+      };
 
       this.normHeight();
       this.loop();
@@ -82,15 +83,17 @@
     }
 
     events() {
-      document.addEventListener("touchmove", e => e.stopPropagation(), {
-        passive: true });
+      document.addEventListener("touchmove", (e) => e.stopPropagation(), {
+        passive: true,
+      });
 
       window.addEventListener("resize", this.resize.bind(this), {
-        passive: true });
+        passive: true,
+      });
 
       document.addEventListener("scroll", this.scroll.bind(this), {
-        passive: true });
-
+        passive: true,
+      });
     }
 
     scroll() {
@@ -132,7 +135,7 @@
       this.scrolling(this.section, `translate3d(0, -${this.currentY}px,0)`);
       // this.scrolling(this.sectionPercent, `translate3d(0, -${this.currentY}px,0)`);
       // this.sectionPercent.textContent = (Math.ceil(this.currentY * .1))+"%";
-      this.images.forEach(img => {
+      this.images.forEach((img) => {
         img.style.transform = `perspective(100vw) rotateX(${rx}deg)`;
       });
     }
@@ -148,8 +151,8 @@
       this.styles();
       this.events();
       this.loop();
-    }}
-
+    }
+  }
 
   var time = 0;
   var loader = document.querySelector("#loader h3");
@@ -161,8 +164,8 @@
     },
     clamp: function (a, min = 0, max = 1) {
       return Math.min(max, Math.max(min, a));
-    } };
-
+    },
+  };
 
   var easings = {
     linear(t) {
@@ -184,8 +187,8 @@
     },
     easeInBounce(x) {
       return 1 - easings["easeOutBounce"](1 - x);
-    } };
-
+    },
+  };
 
   const nope = () => {};
 
@@ -195,8 +198,8 @@
       delay: o.delay || 0,
       easing: o.easing || "linear",
       complete: o.complete || nope,
-      update: o.update || nope };
-
+      update: o.update || nope,
+    };
 
     const f = () => {
       let rafid = undefined;
@@ -233,34 +236,29 @@
 
     f();
   };
+  const bodyClassList = document.body.classList;
 
   triggerScroll.addEventListener("click", () => {
     if (isMobile) {
       targetView.scrollIntoView();
       return;
     }
-
-    // let pos = { last: 0, end: targetView.offsetTop / 2 };
-    // anime({
-    // 	targets: pos,
-    // 	last: pos.end,
-    // 	easing: "easeInBounce",
-    // 	duration: 800,
-    // 	update: function () {
-    // 		window.scrollTo(0, pos.last);
-    // 	}
-    // });
     const offsetTop = targetView.offsetTop / 2;
     tween({
       easing: "easeInBounce",
       duration: 800,
       update: function (t) {
+        bodyClassList.add("disabled-hover");
         window.scrollTo(0, m.lerp(0, offsetTop, t));
-      } });
-
+      },
+      complete: function () {
+        bodyClassList.remove("disabled-hover");
+      },
+    });
   });
 
   window.addEventListener("load", () => {
+    bodyClassList.add("disabled-hover");
     setTimeout(function () {
       window.scrollTo(0, 0);
       fLoader();
